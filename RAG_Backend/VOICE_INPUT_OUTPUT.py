@@ -4,7 +4,7 @@ import pyttsx3 ##from text to voice
 import queue
 import json
 
-model_path="vosk-model-small-cn-0.22"
+
 
 # q = queue.Queue()
 duration = 5
@@ -18,8 +18,7 @@ def startListening():
     clientCommandInBytes = clientCommand.flatten().tobytes()
     return clientCommandInBytes
 
-def identfyingCommand(clientCommand):
-    languageModel = vosk.Model(model_path)
+def identfyingCommand(languageModel,clientCommand):
     rec = vosk.KaldiRecognizer(languageModel, sample_rate)
     rec.AcceptWaveform(clientCommand)
     result = json.loads(rec.Result())
