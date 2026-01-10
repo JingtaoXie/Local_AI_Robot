@@ -9,7 +9,7 @@ model_path="vosk-model-small-cn-0.22"
 languageModel = vosk.Model(model_path)
 
 llm = ChatOllama(
-    model="phi3",
+    model="qwen2.5:7b",
     temperature=0,
 )
 
@@ -41,7 +41,7 @@ def writingDatabase(question: str, answer: str):
     memoryDatebase.commit()
 
 def readingDatabase(newQuestion: str):
-    cursor.execute("""SELECT question,anwser FROM MEMORY_TABLE""")
+    cursor.execute("""SELECT question,answer FROM MEMORY_TABLE""")
     questionsList = cursor.fetchall()
 
     if questionsList == []:
@@ -51,7 +51,7 @@ def readingDatabase(newQuestion: str):
         mostSimilarQuestion = None
         mostUsefulAnswer = None
         for question,answer in questionsList:
-            similarity = gettingSimilarQuestion(question,newQuestion)
+            # similarity = gettingSimilarQuestion(question,newQuestion)
             if similarity > theBiggestSimilarity:
                 mostSimilarQuestion = question
                 mostUsefulAnswer = answer
@@ -68,19 +68,22 @@ def questionAndResponse():
         vio.readingAnswer("Sorry I didn't follow your questions")
     else:
         time.sleep(0.5)
-        messages = [
-            ("system", "Answer all questions in Chinese."),
-            ("human", clientCommandinText),
-        ]
+        usefulAnswer = None
+        if usefulAnswer == None:
+            messages = [
+                ("system", "Answer all questions in Chinese, Limit the answer into 150 words."),
+                ("human", clientCommandinText),
+            ]
+            # invoke can return lots of elements and content is the answer itself
+            answer = llm.invoke(messages)
+            print(answer.content)
+            vio.readingAnswer(answer.content)
+            ## save the question and answer to the memory database
+            writingDatabase(clientCommandinText, answer.content)
+        else:
+            print(usefulAnswer)
+            vio.readingAnswer(usefulAnswer)
 
-        ai_msg = llm.invoke(messages)
-
-        # invoke can return lots of elements and content is the answer itself
-        print(ai_msg.content)
-        vio.readingAnswer(ai_msg.content)
-
-        ## save the question and answer to the memory database
-        writingDatabase(clientCommandinText,ai_msg.content)
 
 
 if __name__ == "__main__":
